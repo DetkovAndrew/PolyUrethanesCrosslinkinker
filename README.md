@@ -1,6 +1,3 @@
-# PolyUrethanesCrosslinkinker
-Автоматизированный пайплайн для МД-моделирования процесса сшивки полимеров (LAMMPS + MDAnalysis). Включает итеративный алгоритм образования связей (OH + NCO) с проверкой стерических препятствий, динамическое перестроение топологии (GAFF/RESP) и температурный отжиг для обхода стеклования.
-
 # LAMMPS Polymer Cross-linking Pipeline
 
 An automated molecular dynamics pipeline written in Python and LAMMPS to simulate the chemical cross-linking of polymers (e.g., the formation of polyurethane networks from OH and NCO reactive groups). 
