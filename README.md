@@ -45,3 +45,6 @@
    LAMMPS_EXEC  = "/path/to/your/lmp"  # <--- ВАЖНО: укажите свой путь к исполняемому файлу LAMMPS
    TARGET_NEW_BONDS = 1540                          
    MAX_CYCLES = 500
+3. Запустите пайплайн:
+   ```python
+   python3 master_loop.py
