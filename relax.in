@@ -1,0 +1,56 @@
+# === ИНИЦИАЛИЗАЦИЯ ===
+units           real
+atom_style      full
+
+include         system.in.init
+neighbor        2.0 bin
+neigh_modify    delay 0 every 1 check yes
+comm_modify     cutoff 15.0
+
+read_data       ${DATA_IN}
+include         system.in.settings
+
+# === ЭТАП 1: МЯГКАЯ РЕЛАКСАЦИЯ НАПРЯЖЕНИЙ (Soft-core) ===
+# Даем новым атомам водорода и новым связям разойтись без взрыва (limit 0.05)
+velocity        all create 300.0 12345 rot yes dist gaussian
+timestep        0.5
+fix             soft_relax all nve/limit 0.05
+thermo          100
+run             2000
+unfix           soft_relax
+
+# === ЭТАП 2: МИНИМИЗАЦИЯ ЭНЕРГИИ ===
+min_style       cg
+minimize        1.0e-4 1.0e-6 1000 10000
+
+# === ЭТАП 3: ФИЗИЧЕСКИЙ ОТЖИГ (Simulated Annealing) ===
+suffix gpu
+timestep        1.0
+reset_timestep  0
+
+# 3.1. Нагрев до 400 K (чуть выше Tg, без термической деструкции)
+# Время: 50 ps
+fix             1 all npt temp 300.0 400.0 100.0 iso 1.0 1.0 1000.0
+thermo          1000
+run             50000
+unfix           1
+
+# 3.2. Диффузия при 400 K (Усиление подвижности цепей Рауза)
+# Время: 150 ps (увеличено для реального сближения реакционных групп)
+fix             2 all npt temp 400.0 400.0 100.0 iso 1.0 1.0 1000.0
+run             150000
+unfix           2
+
+# 3.3. Плавное охлаждение (Quench) до 300 K
+# Время: 100 ps (охлаждение 1 K/ps - типичная скорость симуляции MD стекол)
+fix             3 all npt temp 400.0 300.0 100.0 iso 1.0 1.0 1000.0
+run             100000
+unfix           3
+
+# === ЭТАП 4: СТАБИЛИЗАЦИЯ СЕТКИ (Equilibration) ===
+# Время: 100 ps
+fix             4 all npt temp 300.0 300.0 100.0 iso 1.0 1.0 1000.0
+run             100000
+unfix           4
+
+write_data      ${DATA_OUT} nocoeff
